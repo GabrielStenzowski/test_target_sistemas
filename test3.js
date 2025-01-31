@@ -6,31 +6,29 @@
 // IMPORTANTE:
 // a) Usar o json ou xml disponível como fonte dos dados do faturamento mensal;
 // b) Podem existir dias sem faturamento, como nos finais de semana e feriados. Estes dias devem ser ignorados no cálculo da média;
+const fs = require('fs')
 
-let jsonData = `{
-  "faturamento": [67000, 36678, 29229, 27165, 19849, 0, 0, 34500, 39800, 0]
-}`
+// Ler o arquivo JSON
+const rawData = fs.readFileSync('dados.json')
+const faturamento = JSON.parse(rawData)
 
-let dados = JSON.parse(jsonData)
+// Filtrar dias com faturamento maior que zero
+const diasUteis = faturamento.filter((dia) => dia.valor > 0)
 
-let faturamento = dados.faturamento
-let totalFaturamento = 0
-let diasComFaturamento = 0
+// Encontrar menor e maior faturamento
+const menorFaturamento = Math.min(...diasUteis.map((dia) => dia.valor))
+const maiorFaturamento = Math.max(...diasUteis.map((dia) => dia.valor))
 
-let menorFaturamento = Math.min(...faturamento.filter((f) => f > 0))
-let maiorFaturamento = Math.max(...faturamento.filter((f) => f > 0))
+// Calcular a média mensal (ignorando dias sem faturamento)
+const somaFaturamento = diasUteis.reduce((acc, dia) => acc + dia.valor, 0)
+const mediaMensal = somaFaturamento / diasUteis.length
 
-faturamento.forEach((valor) => {
-  if (valor > 0) {
-    totalFaturamento += valor
-    diasComFaturamento++
-  }
-})
+// Contar os dias com faturamento acima da média
+const diasAcimaDaMedia = diasUteis.filter(
+  (dia) => dia.valor > mediaMensal
+).length
 
-let mediaFaturamento = totalFaturamento / diasComFaturamento
-
-let diasAcimaDaMedia = faturamento.filter((f) => f > mediaFaturamento).length
-
-console.log(`Menor Faturamento: ${menorFaturamento}`)
-console.log(`Maior Faturamento: ${maiorFaturamento}`)
+// Exibir resultados
+console.log(`Menor faturamento: R$ ${menorFaturamento.toFixed(2)}`)
+console.log(`Maior faturamento: R$ ${maiorFaturamento.toFixed(2)}`)
 console.log(`Dias com faturamento acima da média: ${diasAcimaDaMedia}`)
